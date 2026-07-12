@@ -17,7 +17,7 @@ export function DashboardHeader({ org, onSync, onRegisterAsset }: DashboardHeade
           {org.date} · {org.name}
         </p>
         <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">
-          Good morning, {org.user}.
+          Hello, {org.user}.
         </h1>
       </div>
 
