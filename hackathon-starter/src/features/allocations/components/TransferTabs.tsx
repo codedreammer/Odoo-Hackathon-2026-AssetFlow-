@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 interface TransferTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  className?: string;
 }
 
 const tabs = [
@@ -28,9 +29,10 @@ const tabs = [
 export default function TransferTabs({
   activeTab,
   onTabChange,
+  className,
 }: TransferTabsProps) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+    <div className={cn("rounded-xl border border-zinc-200 bg-white shadow-sm", className)}>
       <div className="flex overflow-x-auto">
 
         {tabs.map((tab) => {

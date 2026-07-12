@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { Error, PageHeader, SearchBar } from "@/components/common";
+import { BackButton, Error, PageHeader, SearchBar } from "@/components/common";
 import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/ui";
 import { toggleDepartmentStatusAction } from "../actions/department-actions";
 import { useDepartmentSearch } from "../hooks/use-department-search";
@@ -74,9 +74,12 @@ export function DepartmentsScreen({ initialData }: DepartmentsScreenProps) {
       <div className="space-y-6">
         <PageHeader
           actions={
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              Create Department
-            </Button>
+            <>
+              <BackButton />
+              <Button className="ml-4" onClick={() => setCreateDialogOpen(true)}>
+                Create Department
+              </Button>
+            </>
           }
           description="Manage department structure, reporting lines, and active status for your organization."
           eyebrow="Organization"

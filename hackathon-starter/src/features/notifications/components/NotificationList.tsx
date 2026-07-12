@@ -18,7 +18,11 @@ import {
   type NotificationIconVariant,
 } from "@/lib/notification-ui";
 
-// ─── Icon per variant ────────────────────────────────────────────────────────
+import { BackButton, PageHeader } from "@/components/common";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
+import { Card } from "@/components/ui/Card";
 
 function NotifIcon({
   variant,
@@ -27,7 +31,7 @@ function NotifIcon({
   variant: NotificationIconVariant;
   className?: string;
 }) {
-  const props = { size: 18, strokeWidth: 1.8, className };
+  const props = { size: 18, strokeWidth: 2, className };
   switch (variant) {
     case "warning":
       return <AlertTriangle {...props} />;
@@ -44,8 +48,6 @@ function NotifIcon({
   }
 }
 
-// ─── Single notification row ─────────────────────────────────────────────────
-
 function NotificationRow({
   notif,
   onMarkRead,
@@ -58,80 +60,60 @@ function NotificationRow({
 
   return (
     <div
-      className={`group relative flex gap-4 border-b border-[#F0F2F5] px-6 py-4 transition-colors hover:bg-[#F8F9FB] ${
-        !notif.is_read ? "bg-[#FAFBFF]" : "bg-white"
+      className={`group relative flex gap-4 border-b border-zinc-200 px-6 py-4 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/50 ${
+        !notif.is_read ? "bg-blue-50/50 dark:bg-blue-950/20" : "bg-white dark:bg-zinc-950"
       }`}
       id={`notif-${notif.id}`}
     >
-      {/* Unread dot */}
       {!notif.is_read && (
-        <span className="absolute left-3 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#4F46E5]" />
+        <span className="absolute left-3 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-600" />
       )}
 
-      {/* Icon circle */}
-      <div
-        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border ${styles.bg} ${styles.border}`}
-      >
+      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border ${styles.bg} ${styles.border}`}>
         <NotifIcon variant={variant} className={styles.icon} />
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className={`text-[13px] font-semibold leading-snug ${notif.is_read ? "text-[#374151]" : "text-[#0F1117]"}`}>
+            <p className={`text-sm font-semibold leading-snug ${notif.is_read ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-950 dark:text-zinc-50"}`}>
               {notif.title}
               {!notif.is_read && (
-                <span className="ml-2 inline-block h-1.5 w-1.5 translate-y-[-2px] rounded-full bg-[#4F46E5]" />
+                <span className="ml-2 inline-block h-1.5 w-1.5 translate-y-[-2px] rounded-full bg-blue-600" />
               )}
             </p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-[#6B7280]">{notif.message}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{notif.message}</p>
           </div>
-          <span className="flex-shrink-0 text-[11px] text-[#9CA3AF]">
+          <span className="flex-shrink-0 text-xs text-zinc-400 dark:text-zinc-500">
             {formatRelativeTime(notif.created_at)}
           </span>
         </div>
       </div>
 
-      {/* Mark read button — appears on hover when unread */}
       {!notif.is_read && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:bg-zinc-100 hover:text-blue-600 dark:hover:bg-zinc-800 group-hover:opacity-100"
           onClick={() => onMarkRead(notif.id)}
-          title="Mark as read"
-          className="absolute right-5 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#9CA3AF] opacity-0 transition-opacity hover:bg-[#F3F4F6] hover:text-[#4F46E5] group-hover:opacity-100"
+          aria-label="Mark as read"
         >
           <CheckCheck size={15} />
-        </button>
+        </Button>
       )}
     </div>
   );
 }
 
-// ─── Empty state ─────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F3F4F6]">
-        <Bell size={24} className="text-[#9CA3AF]" strokeWidth={1.5} />
-      </div>
-      <p className="text-[14px] font-medium text-[#374151]">You're all caught up</p>
-      <p className="mt-1 text-[12px] text-[#9CA3AF]">No notifications to show right now.</p>
-    </div>
-  );
+interface NotificationListProps {
+  initialNotifications: Notification[];
+  unreadCount: number;
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
-export function NotificationList({
-  notifications: initial,
-}: {
-  notifications: Notification[];
-}) {
-  const [notifications, setNotifications] = useState<Notification[]>(initial);
+export function NotificationList({ initialNotifications, unreadCount }: NotificationListProps) {
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [markingAll, setMarkingAll] = useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
   const total = notifications.length;
 
   const markOneRead = useCallback(async (id: string) => {
@@ -158,52 +140,59 @@ export function NotificationList({
   }, [markingAll, unreadCount]);
 
   return (
-    <div className="space-y-5">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[22px] font-semibold text-[#0F1117]">Notifications</h1>
-          {total > 0 && (
-            <p className="mt-1 text-[13px] text-[#6B7280]">
-              {unreadCount > 0 ? (
-                <>
-                  <span className="font-medium text-[#0F1117]">{unreadCount} unread</span>
-                  {" · "}
-                </>
-              ) : null}
-              {total} total
-            </p>
-          )}
-        </div>
-        {unreadCount > 0 && (
-          <button
-            id="mark-all-read-btn"
-            onClick={markAllRead}
-            disabled={markingAll}
-            className="flex items-center gap-1.5 rounded-md border border-[#E4E7EC] px-3.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#FAFAFA] disabled:opacity-50"
-          >
-            <CheckCheck size={14} />
-            Mark all read
-          </button>
-        )}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        actions={
+          <>
+            <BackButton fallback="/notifications" />
+            {unreadCount > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={markingAll}
+                onClick={markAllRead}
+                className="gap-1.5 ml-4"
+              >
+                <CheckCheck size={14} />
+                <span>{markingAll ? <Spinner size="sm" /> : "Mark all read"}</span>
+              </Button>
+            ) : null}
+          </>
+        }
+        description={
+          total > 0
+            ? (
+              <>
+                {unreadCount > 0 && (
+                  <>
+                    <span className="font-medium text-zinc-950 dark:text-zinc-50">{unreadCount} unread</span>
+                    <span className="mx-2 text-zinc-500 dark:text-zinc-400">·</span>
+                  </>
+                )}
+                <span>{total} total</span>
+              </>
+            )
+            : null
+        }
+        title="Notifications"
+      />
 
-      {/* Notification card */}
-      <div className="overflow-hidden rounded-lg border border-[#E4E7EC] bg-white">
+      <Card className="overflow-hidden">
         {notifications.length === 0 ? (
-          <EmptyState />
+          <EmptyState
+            className="p-12"
+            icon={<Bell className="h-12 w-12 text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />}
+            title="You're all caught up"
+            description="No notifications to show right now."
+          />
         ) : (
-          <div className="divide-y-0">
+          <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
             {notifications.map((notif) => (
-              <NotificationRow
-                key={notif.id}
-                notif={notif}
-                onMarkRead={markOneRead}
-              />
+              <NotificationRow key={notif.id} notif={notif} onMarkRead={markOneRead} />
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

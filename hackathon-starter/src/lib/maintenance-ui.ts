@@ -23,11 +23,11 @@ export function getMaintStatusStyle(status: string) {
   );
 }
 
-export const PRIORITY_STYLES: Record<string, { text: string; label: string }> = {
-  CRITICAL: { text: "text-[#DC2626] font-medium", label: "Critical" },
-  HIGH: { text: "text-[#D97706] font-medium", label: "High" },
-  MEDIUM: { text: "text-[#374151]", label: "Medium" },
-  LOW: { text: "text-[#6B7280]", label: "Low" },
+export const PRIORITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  CRITICAL: { bg: "bg-red-100 dark:bg-red-950/60", text: "text-red-700 dark:text-red-300", label: "Critical" },
+  HIGH: { bg: "bg-amber-100 dark:bg-amber-950/60", text: "text-amber-700 dark:text-amber-300", label: "High" },
+  MEDIUM: { bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-700 dark:text-zinc-300", label: "Medium" },
+  LOW: { bg: "bg-blue-100 dark:bg-blue-950/60", text: "text-blue-700 dark:text-blue-300", label: "Low" },
 };
 
 export function getPriorityStyle(priority: string) {

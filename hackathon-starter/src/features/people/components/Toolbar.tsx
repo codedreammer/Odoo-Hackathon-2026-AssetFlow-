@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 
-import { SearchBar } from "@/components/common/SearchBar";
+import { BackButton, PageHeader, SearchBar } from "@/components/common";
 import { Button } from "@/components/ui/Button";
 
 interface ToolbarProps {
@@ -19,42 +19,25 @@ export default function Toolbar({
   totalEmployees,
 }: ToolbarProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-      <div>
-
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-          People
-        </h1>
-
-        <p className="mt-1 text-sm text-zinc-500">
-          Manage employees, departments and assigned assets.
-        </p>
-
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-
-        <div className="w-full sm:w-80">
-
-          <SearchBar
-            value={search}
-            placeholder="Search employee..."
-            onValueChange={onSearchChange}
-          />
-
-        </div>
-
-        <Button className="gap-2" onClick={onAddClick}>
-
-          <Plus className="h-4 w-4" />
-
-          Add Employee
-
-        </Button>
-
-      </div>
-
-    </div>
+    <PageHeader
+      actions={
+        <>
+          <BackButton />
+          <Button className="gap-2 ml-4" onClick={onAddClick}>
+            <Plus className="h-4 w-4" />
+            Add Employee
+          </Button>
+        </>
+      }
+      description="Manage employees, departments and assigned assets."
+      title="People"
+    >
+      <SearchBar
+        value={search}
+        placeholder="Search employee..."
+        onValueChange={onSearchChange}
+        className="w-full sm:w-80"
+      />
+    </PageHeader>
   );
 }

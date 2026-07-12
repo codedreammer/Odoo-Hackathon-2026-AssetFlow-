@@ -88,7 +88,7 @@ export function LoginForm() {
   });
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full max-w-[30rem]">
       <CardHeader className="space-y-2">
         <CardTitle>Welcome back to AssetFlow</CardTitle>
         <CardDescription>
@@ -96,7 +96,7 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-5" noValidate onSubmit={onSubmit}>
+        <form className="w-full space-y-5" noValidate onSubmit={onSubmit}>
           {submissionError ? (
             <Alert variant="destructive">
               <AlertTitle>Login failed</AlertTitle>
@@ -106,7 +106,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <label
-              className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+              className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
               htmlFor="email"
             >
               Email
@@ -125,7 +125,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <label
-              className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+              className="block text-sm font-medium text-zinc-900 dark:text-zinc-100"
               htmlFor="password"
             >
               Password

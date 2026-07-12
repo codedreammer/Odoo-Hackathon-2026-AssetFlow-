@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 
+import { Container, DashboardLayout } from "@/components/layout";
+import { BackButton, PageHeader } from "@/components/common";
+
 import { allocations } from "./data";
 import {
   calculateStats,
@@ -23,11 +26,9 @@ export default function AllocationPage() {
     "All" | "Active" | "Pending" | "Reserved" | "Maintenance"
   >("All");
 
-  const [department, setDepartment] =
-    useState("All");
+  const [department, setDepartment] = useState("All");
 
-  const [tab, setTab] =
-    useState("allocations");
+  const [tab, setTab] = useState("allocations");
 
   const filteredAllocations = useMemo(() => {
     let data = [...allocations];
@@ -37,10 +38,7 @@ export default function AllocationPage() {
     data = filterByStatus(data, status);
 
     if (department !== "All") {
-      data = data.filter(
-        (item) =>
-          item.department === department
-      );
+      data = data.filter((item) => item.department === department);
     }
 
     return data;
@@ -52,40 +50,20 @@ export default function AllocationPage() {
   );
 
   return (
-    <main className="min-h-screen bg-zinc-100">
-
-      <div className="mx-auto max-w-7xl space-y-6 p-8">
-
-        {/* Header */}
-
-        <div>
-
-          <h1 className="text-3xl font-bold tracking-tight">
-            Asset Allocations
-          </h1>
-
-          <p className="mt-2 text-zinc-500">
-            Track allocated assets,
-            transfer requests and
-            department assignments.
-          </p>
-
-        </div>
-
-        {/* Stats */}
-
-        <AllocationStats
-          stats={stats}
+    <DashboardLayout>
+      <Container size="2xl" className="space-y-6">
+        <PageHeader
+          title="Asset Allocations"
+          description="Track allocated assets, transfer requests and department assignments."
+          actions={
+            <>
+              <BackButton />
+              <TransferTabs className="ml-4" activeTab={tab} onTabChange={setTab} />
+            </>
+          }
         />
 
-        {/* Tabs */}
-
-        <TransferTabs
-          activeTab={tab}
-          onTabChange={setTab}
-        />
-
-        {/* Toolbar */}
+        <AllocationStats stats={stats} />
 
         <TransferToolbar
           search={search}
@@ -102,21 +80,11 @@ export default function AllocationPage() {
                 | "Maintenance"
             )
           }
-          onDepartmentChange={
-            setDepartment
-          }
+          onDepartmentChange={setDepartment}
         />
 
-        {/* Table */}
-
-        <AllocationTable
-          allocations={
-            filteredAllocations
-          }
-        />
-
-      </div>
-
-    </main>
+        <AllocationTable allocations={filteredAllocations} />
+      </Container>
+    </DashboardLayout>
   );
 }

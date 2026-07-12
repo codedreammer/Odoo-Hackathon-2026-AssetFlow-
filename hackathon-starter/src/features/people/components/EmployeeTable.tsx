@@ -1,11 +1,12 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Users } from "lucide-react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/common/EmptyState";
 
 import {
   Table,
@@ -45,6 +46,18 @@ export default function EmployeeTable({
   onToggleStatus,
   pendingEmployeeId,
 }: EmployeeTableProps) {
+  if (employees.length === 0) {
+    return (
+      <Card className="rounded-2xl p-12">
+        <EmptyState
+          icon={<Users className="h-12 w-12 mx-auto text-zinc-400" />}
+          title="No employees found"
+          description="Get started by adding your first employee."
+        />
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden rounded-2xl">
 

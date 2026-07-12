@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Check, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Camera, Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { type Profile } from "@/features/settings/actions";
 import { getInitials, getAvatarStyle } from "@/lib/asset-ui";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 // ─── Reusable field ───────────────────────────────────────────────────────────
 
@@ -17,6 +21,7 @@ function Field({
   disabled,
   readOnly,
   suffix,
+  error,
 }: {
   label: string;
   id: string;
@@ -27,14 +32,15 @@ function Field({
   disabled?: boolean;
   readOnly?: boolean;
   suffix?: React.ReactNode;
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[13px] font-medium text-[#374151]">
+      <label htmlFor={id} className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
         {label}
       </label>
       <div className="relative">
-        <input
+        <Input
           id={id}
           type={type}
           value={value}
@@ -42,12 +48,17 @@ function Field({
           placeholder={placeholder}
           disabled={disabled}
           readOnly={readOnly}
-          className={`w-full rounded-md border border-[#E4E7EC] px-3 py-2 text-[13px] text-[#0F1117] placeholder:text-[#9CA3AF] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 ${
-            readOnly || disabled ? "bg-[#F9FAFB] text-[#6B7280] cursor-not-allowed" : "bg-white"
-          } ${suffix ? "pr-10" : ""}`}
+          className={`${suffix ? "pr-10" : ""} ${error ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : ""}`}
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={error ? `${id}-error` : undefined}
         />
         {suffix && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>
+        )}
+        {error && (
+          <p id={`${id}-error`} className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+            {error}
+          </p>
         )}
       </div>
     </div>
@@ -63,11 +74,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl: string | null })
   return (
     <div className="relative h-16 w-16 flex-shrink-0">
       {avatarUrl ? (
-        <img
-          src={avatarUrl}
-          alt={name}
-          className="h-16 w-16 rounded-full object-cover"
-        />
+        <img src={avatarUrl} alt={name} className="h-16 w-16 rounded-full object-cover" />
       ) : (
         <div
           className={`flex h-16 w-16 items-center justify-center rounded-full ${style.bg} ${style.text} text-[18px] font-semibold`}
@@ -78,27 +85,10 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl: string | null })
       <button
         type="button"
         title="Change photo (coming soon)"
-        className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#0F1117] text-white hover:bg-[#374151]"
+        className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-zinc-900 dark:bg-zinc-50 text-white hover:bg-zinc-700 dark:hover:bg-zinc-100 dark:hover:text-zinc-900"
       >
         <Camera size={11} />
       </button>
-    </div>
-  );
-}
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type }: { message: string; type: "success" | "error" }) {
-  return (
-    <div
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg border px-4 py-3 text-[13px] font-medium shadow-lg ${
-        type === "success"
-          ? "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]"
-          : "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]"
-      }`}
-    >
-      {type === "success" && <Check size={14} />}
-      {message}
     </div>
   );
 }
@@ -112,15 +102,16 @@ function ProfileSection({ profile }: { profile: Profile }) {
   const [phone, setPhone] = useState(profile.phone ?? "");
   const [jobTitle, setJobTitle] = useState(profile.job_title ?? "");
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [alert, setAlert] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showAlert = (message: string, type: "success" | "error") => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert(null), 3000);
   };
 
   const handleSave = async () => {
     setSaving(true);
+    setAlert(null);
     try {
       const res = await fetch("/api/settings/profile", {
         method: "PATCH",
@@ -133,9 +124,9 @@ function ProfileSection({ profile }: { profile: Profile }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to save");
-      showToast("Profile saved successfully.", "success");
+      showAlert("Profile saved successfully.", "success");
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Something went wrong.", "error");
+      showAlert(err instanceof Error ? err.message : "Something went wrong.", "error");
     } finally {
       setSaving(false);
     }
@@ -145,28 +136,32 @@ function ProfileSection({ profile }: { profile: Profile }) {
   const roleLabel = profile.role ?? "Administrator";
 
   return (
-    <section className="rounded-lg border border-[#E4E7EC] bg-white p-6">
-      <h2 className="mb-5 text-[15px] font-semibold text-[#0F1117]">Profile</h2>
+    <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      {alert && (
+        <Alert variant={alert.type === "success" ? "success" : "destructive"} className="mb-4">
+          <AlertTitle>{alert.type === "success" ? "Success" : "Error"}</AlertTitle>
+          <AlertDescription>{alert.message}</AlertDescription>
+        </Alert>
+      )}
+
+      <h2 className="mb-5 text-lg font-semibold text-zinc-950 dark:text-zinc-50">Profile</h2>
 
       {/* Avatar row */}
       <div className="mb-6 flex items-center gap-4">
         <Avatar name={fullName} avatarUrl={profile.avatar_url} />
         <div>
-          <p className="text-[15px] font-semibold text-[#0F1117]">{fullName}</p>
-          <p className="text-[12px] text-[#6B7280]">
+          <p className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">{fullName}</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {profile.email} · <span className="capitalize">{roleLabel}</span>
           </p>
-          <button
-            type="button"
-            className="mt-1.5 text-[12px] font-medium text-[#4F46E5] hover:underline"
-          >
+          <button type="button" className="mt-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
             Change photo
           </button>
         </div>
       </div>
 
       {/* Fields */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field
           label="First name"
           id="first-name"
@@ -210,18 +205,11 @@ function ProfileSection({ profile }: { profile: Profile }) {
       </div>
 
       <div className="mt-5 flex justify-end">
-        <button
-          id="save-profile-btn"
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-md bg-[#0F1117] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#1F2229] disabled:opacity-60"
-        >
+        <Button disabled={saving} onClick={handleSave} className="gap-2">
           {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
           Save changes
-        </button>
+        </Button>
       </div>
-
-      {toast && <Toast message={toast.msg} type={toast.type} />}
     </section>
   );
 }
@@ -235,23 +223,24 @@ function PasswordSection() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [alert, setAlert] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+  const showAlert = (message: string, type: "success" | "error") => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert(null), 3500);
   };
 
   const handleChange = async () => {
     if (!newPw || newPw.length < 6) {
-      showToast("New password must be at least 6 characters.", "error");
+      showAlert("New password must be at least 6 characters.", "error");
       return;
     }
     if (newPw !== confirmPw) {
-      showToast("Passwords do not match.", "error");
+      showAlert("Passwords do not match.", "error");
       return;
     }
     setSaving(true);
+    setAlert(null);
     try {
       const res = await fetch("/api/settings/password", {
         method: "PATCH",
@@ -260,23 +249,28 @@ function PasswordSection() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to update password");
-      showToast("Password updated successfully.", "success");
+      showAlert("Password updated successfully.", "success");
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Something went wrong.", "error");
+      showAlert(err instanceof Error ? err.message : "Something went wrong.", "error");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <section className="rounded-lg border border-[#E4E7EC] bg-white p-6">
-      <h2 className="mb-1.5 text-[15px] font-semibold text-[#0F1117]">Change password</h2>
-      <p className="mb-5 text-[12px] text-[#6B7280]">
-        Must be at least 6 characters.
-      </p>
+    <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      {alert && (
+        <Alert variant={alert.type === "success" ? "success" : "destructive"} className="mb-4">
+          <AlertTitle>{alert.type === "success" ? "Success" : "Error"}</AlertTitle>
+          <AlertDescription>{alert.message}</AlertDescription>
+        </Alert>
+      )}
+
+      <h2 className="mb-1.5 text-lg font-semibold text-zinc-950 dark:text-zinc-50">Change password</h2>
+      <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">Must be at least 6 characters.</p>
 
       <div className="space-y-4">
         <Field
@@ -295,13 +289,9 @@ function PasswordSection() {
           onChange={setNewPw}
           placeholder="••••••••"
           suffix={
-            <button
-              type="button"
-              onClick={() => setShowNew((v) => !v)}
-              className="text-[#9CA3AF] hover:text-[#374151]"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setShowNew((v) => !v)} aria-label={showNew ? "Hide password" : "Show password"}>
               {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
+            </Button>
           }
         />
         <Field
@@ -312,30 +302,19 @@ function PasswordSection() {
           onChange={setConfirmPw}
           placeholder="••••••••"
           suffix={
-            <button
-              type="button"
-              onClick={() => setShowConfirm((v) => !v)}
-              className="text-[#9CA3AF] hover:text-[#374151]"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? "Hide password" : "Show password"}>
               {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
+            </Button>
           }
         />
       </div>
 
       <div className="mt-5 flex justify-end">
-        <button
-          id="change-password-btn"
-          onClick={handleChange}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-md bg-[#0F1117] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#1F2229] disabled:opacity-60"
-        >
+        <Button disabled={saving} onClick={handleChange} className="gap-2">
           {saving ? <Loader2 size={13} className="animate-spin" /> : null}
           Update password
-        </button>
+        </Button>
       </div>
-
-      {toast && <Toast message={toast.msg} type={toast.type} />}
     </section>
   );
 }
@@ -361,19 +340,14 @@ export function SettingsProfile({ profile }: { profile: Profile }) {
         <ul className="space-y-0.5">
           {SETTINGS_NAV.map((item) => (
             <li key={item.id}>
-              <button
+              <Button
                 type="button"
+                variant={activeTab === item.id ? "default" : "ghost"}
                 disabled={item.disabled}
-                className={`w-full rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors ${
-                  activeTab === item.id
-                    ? "bg-[#0F1117] text-white"
-                    : item.disabled
-                    ? "cursor-not-allowed text-[#C4C9D4]"
-                    : "text-[#374151] hover:bg-[#F3F4F6]"
-                }`}
+                className="w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors"
               >
                 {item.label}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 
-import { PageHeader, SearchBar } from "@/components/common";
+import { BackButton, PageHeader, SearchBar } from "@/components/common";
 import { Button, Select } from "@/components/ui";
 import { getStatusStyle } from "@/lib/asset-ui";
 
@@ -60,10 +60,13 @@ export default function Toolbar({
     <div className="space-y-4">
       <PageHeader
         actions={
-          <Button className="gap-2" onClick={onAddClick}>
-            <Plus className="h-4 w-4" />
-            Register Asset
-          </Button>
+          <>
+            <BackButton />
+            <Button className="gap-2 ml-4" onClick={onAddClick}>
+              <Plus className="h-4 w-4" />
+              Register Asset
+            </Button>
+          </>
         }
         description="Register, search, and manage assets across categories, locations, and lifecycle status."
         eyebrow="Assets"
